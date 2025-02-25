@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Solicita o delay e o loop ao usuário
+delay=$(zenity --entry --title="Delay" --text="Informe o delay em centésimos de segundo (100 = 1 segundo):")
+loop=$(zenity --entry --title="Loop" --text="Informe o número de repetições do loop (0 para infinito):")
+
+# Verifica se os valores foram fornecidos
+if [ -z "$delay" ] || [ -z "$loop" ]; then
+    zenity --error --text="Valores de delay e loop são obrigatórios."
+    exit 1
+fi
+
+# Gera um nome de arquivo único baseado na data e hora atuais
+output_file="Imagem_animada_$(date +%Y%m%d_%H%M%S).apng"
+
+# Mensagens de debug
+echo "Delay: $delay" > /tmp/converter_em_apng_debug.log
+echo "Loop: $loop" >> /tmp/converter_em_apng_debug.log
+echo "Arquivos: $@" >> /tmp/converter_em_apng_debug.log
+echo "Arquivo de saída: $output_file" >> /tmp/converter_em_apng_debug.log
+
+# Executa o script de conversão
+/usr/local/bin/convert-png -d $delay -l $loop -o $output_file "$@" &>> /tmp/converter_em_apng_debug.log
+
+# Verifica se o comando foi bem-sucedido
+if [ $? -eq 0 ]; then
+    zenity --info --text="PNG animado criado com sucesso: $output_file"
+else
+    zenity --error --text="Erro ao criar o PNG animado. Verifique o arquivo /tmp/converter_em_apng_debug.log para mais detalhes."
+fi

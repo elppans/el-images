@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Função para exibir a ajuda
+function show_help {
+    echo "Uso: $0 [opções] [diretório ou arquivos]"
+    echo "Opções:"
+    echo "  -d, --delay         Tempo de atraso entre os quadros em centésimos de segundo (padrão: 100 (100 = 1 segundo))"
+    echo "  -l, --loop          Número de repetições do loop (0 para infinito, padrão: 0)"
+    echo "  -o, --output        Nome do arquivo de saída (padrão: output.apng)"
+    echo "  -h, --help          Exibe esta ajuda"
+    echo "Para selecionar arquivos específicos, forneça o caminho completo dos arquivos como argumentos."
+    echo
+    echo "Exemplos:"
+    echo "  $0 -d 200 /caminho/para/imagens/"
+    echo "  $0 -d 100 /caminho/para/imagem1.png /caminho/para/imagem2.jpg"
+    echo "  $0 -d 200 -l 3 -o meu_apng.apng /caminho/para/imagens/"
+    echo "  $0 -d 100 -l 0 -o meu_apng.apng /caminho/para/imagem1.png /caminho/para/imagem2.jpg"
+}
+
+# Valores padrão das opções
+delay=100
+loop=0
+output="output.apng"
+
+# Parsing das opções
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+  -d | --delay )
+    shift; delay=$1
+    ;;
+  -l | --loop )
+    shift; loop=$1
+    ;;
+  -o | --output )
+    shift; output=$1
+    ;;
+  -h | --help )
+    show_help
+    exit 0
+    ;;
+esac; shift; done
+
+# Verificação de arquivos ou diretório
+if [ -z "$1" ]; then
+    echo "Erro: Diretório ou arquivos não especificados."
+    show_help
+    exit 1
+fi
+
+# Verificação de formato e existência de arquivos
+if [ -d "$1" ]; then
+    files=("$1"/*)
+else
+    files=("$@")
+fi
+
+if [ ${#files[@]} -eq 0 ]; then
+    echo "Erro: Nenhuma imagem encontrada no diretório ou arquivos especificados."
+    exit 1
+fi
+
+# Verificação se o arquivo de saída já existe
+if [ -f "$output" ]; then
+    echo "Erro: O arquivo de saída '$output' já existe. Escolha um nome diferente."
+    exit 1
+fi
+
+# Comando para converter as imagens em GIF
+convert -delay $delay -loop $loop "${files[@]}" "$output"
+
+if [ $? -eq 0 ]; then
+    echo "PNG animado criado com sucesso: $output"
+else
+    echo "Erro ao criar o PNG animado."
+fi

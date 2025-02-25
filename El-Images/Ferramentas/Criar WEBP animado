@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Solicita o delay, loop e qualidade ao usuário
+delay=$(zenity --entry --title="Delay" --text="Informe o delay em centésimos de segundo (100 = 1 segundo):")
+loop=$(zenity --entry --title="Loop" --text="Informe o número de repetições do loop (0 para infinito):")
+quality=$(zenity --entry --title="Qualidade" --text="Informe a qualidade do WebP (1 a 100, padrão: 90):")
+
+# Define um valor padrão para a qualidade se não for informado
+if [ -z "$quality" ]; then
+    quality=90
+fi
+
+# Verifica se os valores obrigatórios foram fornecidos
+if [ -z "$delay" ] || [ -z "$loop" ]; then
+    zenity --error --text="Valores de delay e loop são obrigatórios."
+    exit 1
+fi
+
+# Gera um nome de arquivo único baseado na data e hora atuais
+output_file="Imagem_animada_$(date +%Y%m%d_%H%M%S).webp"
+
+# Mensagens de debug
+log_file="/tmp/converter_em_webp_debug.log"
+echo "Delay: $delay" > "$log_file"
+echo "Loop: $loop" >> "$log_file"
+echo "Qualidade: $quality" >> "$log_file"
+echo "Arquivos: $@" >> "$log_file"
+echo "Arquivo de saída: $output_file" >> "$log_file"
+
+# Executa o script de conversão para WebP animado
+/usr/local/bin/convert-elwebp -d $delay -l $loop -q $quality -o $output_file "$@" &>> "$log_file"
+
+# Verifica se o comando foi bem-sucedido
+if [ $? -eq 0 ]; then
+    zenity --info --text="WebP animado criado com sucesso: $output_file"
+else
+    zenity --error --text="Erro ao criar o WebP animado. Verifique o arquivo $log_file para mais detalhes."
+fi
