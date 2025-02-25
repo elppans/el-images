@@ -23,15 +23,19 @@ function show_help {
 output_dir="./convertido"
 
 # Parsing das opções
-while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
-  -o | --output-dir )
-    shift; output_dir="$1"
-    ;;
-  -h | --help )
-    show_help
-    exit 0
-    ;;
-esac; shift; done
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do 
+    case $1 in
+        -o | --output-dir )
+            shift
+            output_dir="$1"
+            ;;
+        -h | --help )
+            show_help
+            exit 0
+            ;;
+    esac
+    shift
+done
 
 # Verifica se o espaço de cores foi fornecido
 if [ -z "$1" ]; then
@@ -50,7 +54,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-# Verifica se o diretório de saída existe; caso contrário, cria
+# Criar o diretório de saída caso não exista
 mkdir -p "$output_dir"
 
 # Se for um diretório, pega todas as imagens dentro dele
@@ -68,22 +72,12 @@ fi
 
 # Define o perfil de cores correto para cada opção
 case "$color_space" in
-    rgb)
-        convert_space="sRGB"
-        ;;
-    cmyk)
-        convert_space="CMYK"
-        ;;
-    gray)
-        convert_space="Gray"
-        ;;
-    lab)
-        convert_space="Lab"
-        ;;
-    ycbcr)
-        convert_space="YCbCr"
-        ;;
-    *)
+    rgb) convert_space="sRGB" ;;
+    cmyk) convert_space="CMYK" ;;
+    gray) convert_space="Gray" ;;
+    lab) convert_space="Lab" ;;
+    ycbcr) convert_space="YCbCr" ;;
+    *) 
         echo "Erro: Espaço de cores inválido. Use rgb, cmyk, gray, lab ou ycbcr."
         show_help
         exit 1
