@@ -22,6 +22,30 @@ function show_help {
 # Valores padrão
 output_dir="./convertido"
 
+# Verifica se o espaço de cores foi fornecido
+if [ -z "$1" ]; then
+    echo "Erro: Nenhum espaço de cores especificado."
+    show_help
+    exit 1
+fi
+
+color_space="$1"
+shift  # Remove o primeiro argumento (espaço de cores)
+
+# Define o perfil de cores correto para cada opção
+case "$color_space" in
+    rgb) convert_space="sRGB" ;;
+    cmyk) convert_space="CMYK" ;;
+    gray) convert_space="Gray" ;;
+    lab) convert_space="Lab" ;;
+    ycbcr) convert_space="YCbCr" ;;
+    *) 
+        echo "Erro: Espaço de cores inválido. Use rgb, cmyk, gray, lab ou ycbcr."
+        show_help
+        exit 1
+        ;;
+esac
+
 # Parsing das opções
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do 
     case $1 in
@@ -32,6 +56,11 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         -h | --help )
             show_help
             exit 0
+            ;;
+        * ) 
+            echo "Erro: Opção inválida: $1"
+            show_help
+            exit 1
             ;;
     esac
     shift
@@ -47,16 +76,6 @@ fi
 # Criar o diretório de saída caso não exista
 mkdir -p "$output_dir"
 
-# Verifica se o espaço de cores foi fornecido
-if [ -z "$1" ]; then
-    echo "Erro: Nenhum espaço de cores especificado."
-    show_help
-    exit 1
-fi
-
-color_space="$1"
-shift  # Remove o primeiro argumento (espaço de cores)
-
 # Se for um diretório, pega todas as imagens dentro dele
 if [ -d "$1" ]; then
     files=("$1"/*)
@@ -69,20 +88,6 @@ if [ ${#files[@]} -eq 0 ]; then
     echo "Erro: Nenhuma imagem encontrada no diretório ou arquivos especificados."
     exit 1
 fi
-
-# Define o perfil de cores correto para cada opção
-case "$color_space" in
-    rgb) convert_space="sRGB" ;;
-    cmyk) convert_space="CMYK" ;;
-    gray) convert_space="Gray" ;;
-    lab) convert_space="Lab" ;;
-    ycbcr) convert_space="YCbCr" ;;
-    *) 
-        echo "Erro: Espaço de cores inválido. Use rgb, cmyk, gray, lab ou ycbcr."
-        show_help
-        exit 1
-        ;;
-esac
 
 # Processa as imagens
 for file in "${files[@]}"; do
@@ -101,3 +106,4 @@ for file in "${files[@]}"; do
 done
 
 echo "Conversão concluída! Imagens salvas em: $output_dir"
+
