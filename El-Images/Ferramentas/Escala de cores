@@ -16,20 +16,20 @@ if [ -z "$color_space" ]; then
     exit 1
 fi
 
-# Mapeia a opção selecionada para o formato correto do ImageMagick
+# Mapeia a opção selecionada para o formato aceito pelo `convert-elcolorspace`
 case "$color_space" in
-    "Gray (Escala de Cinza)") convert_space="Gray" ;;
-    "RGB") convert_space="sRGB" ;;
-    "CMYK") convert_space="CMYK" ;;
-    "LAB") convert_space="Lab" ;;
-    "YCbCr") convert_space="YCbCr" ;;
+    "Gray (Escala de Cinza)") convert_space="gray" ;;
+    "RGB") convert_space="rgb" ;;
+    "CMYK") convert_space="cmyk" ;;
+    "LAB") convert_space="lab" ;;
+    "YCbCr") convert_space="ycbcr" ;;
     *) zenity --error --text="Erro: Espaço de cores inválido."; exit 1 ;;
 esac
 
-# Diretório de saída
+# Diretório de saída padrão
 output_dir="$HOME/Imagens/Convertidas"
 
-# Cria o diretório de saída, se não existir
+# Criar diretório de saída se não existir
 mkdir -p "$output_dir"
 
 # Arquivo de log
@@ -38,22 +38,12 @@ echo "Espaço de cores escolhido: $convert_space" > "$log_file"
 echo "Arquivos: $@" >> "$log_file"
 echo "Diretório de saída: $output_dir" >> "$log_file"
 
-# Processa os arquivos selecionados
-for file in "$@"; do
-    if [[ -f "$file" ]]; then
-        filename=$(basename "$file")
-        output_file="$output_dir/$filename"
+# Chama o script `convert-elcolorspace` para processar as imagens
+/usr/local/bin/convert-elcolorspace "$convert_space" -o "$output_dir" "$@" &>> "$log_file"
 
-        # Converte o espaço de cores
-        convert "$file" -colorspace "$convert_space" "$output_file"
-
-        if [ $? -eq 0 ]; then
-            echo "Convertido: $file -> $output_file ($convert_space)" >> "$log_file"
-        else
-            echo "Erro ao converter: $file" >> "$log_file"
-            zenity --error --text="Erro ao converter: $file. Verifique o log em $log_file."
-        fi
-    fi
-done
-
-zenity --info --text="Conversão concluída! Arquivos salvos em: $output_dir"
+# Verifica se houve sucesso
+if [ $? -eq 0 ]; then
+    zenity --info --text="Conversão concluída! Arquivos salvos em: $output_dir"
+else
+    zenity --error --text="Erro ao converter as imagens. Verifique o log em $log_file."
+fi

@@ -20,7 +20,7 @@ echo "Arquivos: $@" >> /tmp/converter_em_apng_debug.log
 echo "Arquivo de saída: $output_file" >> /tmp/converter_em_apng_debug.log
 
 # Executa o script de conversão
-/usr/local/bin/convert-png -d $delay -l $loop -o $output_file "$@" &>> /tmp/converter_em_apng_debug.log
+/usr/local/bin/convert-elpng -d $delay -l $loop -o $output_file "$@" &>> /tmp/converter_em_apng_debug.log
 
 # Verifica se o comando foi bem-sucedido
 if [ $? -eq 0 ]; then
