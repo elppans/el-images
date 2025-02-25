@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Cor de fundo padrão, caso o usuário não tenha especificado ou tenha cancelado a seleção
+default_color="#FFFFFF"
+
+# Exibe a caixa de diálogo Zenity para selecionar a cor de fundo
+color=$(zenity --color-selection --title="Selecione a cor de fundo" --show-palette)
+
+# Verifica se o usuário cancelou a seleção ou não escolheu uma cor
+if [ -z "$color" ]; then
+    color=$default_color
+    echo "Nenhuma cor selecionada. Usando a cor padrão: $color"
+else
+    echo "Cor selecionada: $color"
+fi
+
+# Diretório de saída
+output_dir="$HOME/Imagens/Convertidas"
+
+# Cria o diretório de saída se não existir
+mkdir -p "$output_dir"
+
+# Verifica se há arquivos ou diretórios passados como argumento
+if [ -z "$1" ]; then
+    zenity --error --text="Erro: Nenhum arquivo ou diretório selecionado."
+    exit 1
+fi
+
+# Loop para processar os arquivos selecionados
+for file in "$@"; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        output_file="$output_dir/$filename"
+
+        # Executa o script de conversão chamando o seu script convert-elcolor2transparent
+        /usr/local/bin/convert-elcolor2transparent "$color" -o "$output_dir" "$file"
+
+        if [ $? -eq 0 ]; then
+            zenity --info --text="Imagem convertida: $file -> $output_file"
+        else
+            zenity --error --text="Erro ao converter a imagem: $file"
+        fi
+    fi
+done
+
+echo "Conversão concluída! Imagens salvas em: $output_dir"
