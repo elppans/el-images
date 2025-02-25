@@ -8,19 +8,17 @@ function show_help {
     echo "  -h, --help         Exibe esta ajuda"
     echo
     echo "Espaços de cores suportados:"
-    echo "  rgb      - Converte para RGB"
-    echo "  cmyk     - Converte para CMYK"
-    echo "  gray     - Converte para escala de cinza"
-    echo "  lab      - Converte para LAB"
-    echo "  ycbcr    - Converte para YCbCr"
+    echo "  rgb, cmyk, gray, lab, ycbcr"
     echo
-    echo "Exemplos:"
-    echo "  $0 rgb /caminho/para/imagens/"
-    echo "  $0 cmyk -o /caminho/saida/ /caminho/para/imagem1.jpg /caminho/para/imagem2.png"
+    echo "Exemplo:"
+    echo "  $0 gray -o /meu/diretorio/ /caminho/imagens/"
 }
 
-# Valores padrão
+# Definição de valores padrão
 output_dir="./convertido"
+
+# Exibe os argumentos recebidos para depuração
+echo "Argumentos recebidos: $@" >> /tmp/convert-elcolorspace-debug.log
 
 # Parsing das opções
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do 
@@ -28,10 +26,16 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         -o | --output-dir )
             shift
             output_dir="$1"
+            echo "Diretório de saída definido: $output_dir" >> /tmp/convert-elcolorspace-debug.log
             ;;
         -h | --help )
             show_help
             exit 0
+            ;;
+        *)
+            echo "Opção desconhecida: $1" >> /tmp/convert-elcolorspace-debug.log
+            show_help
+            exit 1
             ;;
     esac
     shift
@@ -39,23 +43,24 @@ done
 
 # Verifica se o espaço de cores foi fornecido
 if [ -z "$1" ]; then
-    echo "Erro: Nenhum espaço de cores especificado."
+    echo "Erro: Nenhum espaço de cores especificado." >> /tmp/convert-elcolorspace-debug.log
     show_help
     exit 1
 fi
 
 color_space="$1"
-shift  # Remove o primeiro argumento (espaço de cores)
+shift  # Remove o argumento do espaço de cores
 
-# Verifica se há arquivos ou diretório fornecidos
+# Verifica se há arquivos ou diretórios fornecidos
 if [ -z "$1" ]; then
-    echo "Erro: Nenhum diretório ou arquivo especificado."
+    echo "Erro: Nenhum diretório ou arquivo especificado." >> /tmp/convert-elcolorspace-debug.log
     show_help
     exit 1
 fi
 
 # Criar o diretório de saída caso não exista
 mkdir -p "$output_dir"
+echo "Criado ou verificado diretório de saída: $output_dir" >> /tmp/convert-elcolorspace-debug.log
 
 # Se for um diretório, pega todas as imagens dentro dele
 if [ -d "$1" ]; then
@@ -64,13 +69,13 @@ else
     files=("$@")
 fi
 
-# Verifica se há arquivos no array
+# Verifica se há arquivos válidos
 if [ ${#files[@]} -eq 0 ]; then
-    echo "Erro: Nenhuma imagem encontrada no diretório ou arquivos especificados."
+    echo "Erro: Nenhuma imagem encontrada." >> /tmp/convert-elcolorspace-debug.log
     exit 1
 fi
 
-# Define o perfil de cores correto para cada opção
+# Mapeamento do espaço de cores
 case "$color_space" in
     rgb) convert_space="sRGB" ;;
     cmyk) convert_space="CMYK" ;;
@@ -78,26 +83,28 @@ case "$color_space" in
     lab) convert_space="Lab" ;;
     ycbcr) convert_space="YCbCr" ;;
     *) 
-        echo "Erro: Espaço de cores inválido. Use rgb, cmyk, gray, lab ou ycbcr."
+        echo "Erro: Espaço de cores inválido." >> /tmp/convert-elcolorspace-debug.log
         show_help
         exit 1
         ;;
 esac
 
-# Processa as imagens
+# Processamento das imagens
 for file in "${files[@]}"; do
     if [[ -f "$file" ]]; then
         filename=$(basename "$file")
         output_file="$output_dir/$filename"
-
+        
+        echo "Convertendo: $file -> $output_file ($convert_space)" >> /tmp/convert-elcolorspace-debug.log
+        
         convert "$file" -colorspace "$convert_space" "$output_file"
 
         if [ $? -eq 0 ]; then
-            echo "Convertido: $file -> $output_file ($convert_space)"
+            echo "SUCESSO: $output_file" >> /tmp/convert-elcolorspace-debug.log
         else
-            echo "Erro ao converter: $file"
+            echo "ERRO ao converter: $file" >> /tmp/convert-elcolorspace-debug.log
         fi
     fi
 done
 
-echo "Conversão concluída! Imagens salvas em: $output_dir"
+echo "Conversão concluída. Arquivos salvos em: $output_dir" >> /tmp/convert-elcolorspace-debug.log
