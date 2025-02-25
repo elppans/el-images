@@ -5,7 +5,8 @@ if ! command -v zenity &> /dev/null
 then
     echo "Zenity não está instalado. Instalando..."
     # sudo apt-get install zenity -y
-    sudo pacman --needed --noconfirm -S zenity
+    # sudo pacman --needed --noconfirm -S zenity
+    exit 1
 fi
 
 LOCAL_BIN="usr/local/bin"
@@ -22,7 +23,7 @@ cp -rf "$ACTION_TOOLS" "$ACTION_DIR"
 chmod +x "$ACTION_DIR"/"$ACTION_TOOLS"/*/*
 
 # Copie os binários para o sistema
-cp -a "$LOCAL_BIN" "/$LOCAL_BIN"
+sudo cp -a "$LOCAL_BIN" "/$LOCAL_BIN"
 
 # Reinicie o Nautilus para aplicar as mudanças
 nautilus -q
