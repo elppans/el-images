@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Função para exibir a ajuda
+function show_help {
+    echo "Uso: $0 [opções] [cor de fundo] [diretório ou arquivos]"
+    echo "Opções:"
+    echo "  -o, --output-dir   Diretório para salvar as imagens convertidas (padrão: convertido/ no diretório atual)"
+    echo "  -h, --help         Exibe esta ajuda"
+    echo
+    echo "Exemplo de cor de fundo: 'red', '#FF0000', 'rgb(255,0,0)'"
+    echo
+    echo "Se nenhuma cor de fundo for especificada, o valor padrão será '#FFFFFF' (branco)."
+    echo
+    echo "Exemplos:"
+    echo "  $0 red /caminho/para/imagens/"
+    echo "  $0 '#FF0000' -o /caminho/saida/ /caminho/para/imagem1.png /caminho/para/imagem2.png"
+}
+
+# Valores padrão
+output_dir="./convertido"
+bg_color="#FFFFFF"  # Cor de fundo padrão (branco)
+
+# Verifica se a cor de fundo foi fornecida (se o primeiro argumento não for um diretório ou arquivo)
+if [ ! -z "$1" ] && [[ ! "$1" =~ ^- ]]; then
+    bg_color="$1"
+    shift  # Remove o primeiro argumento (cor de fundo)
+fi
+
+# Parsing das opções
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do 
+    case $1 in
+        -o | --output-dir )
+            shift
+            output_dir="$1"
+            ;;
+        -h | --help )
+            show_help
+            exit 0
+            ;;
+        * ) 
+            echo "Erro: Opção inválida: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# Verifica se há arquivos ou diretório fornecidos
+if [ -z "$1" ]; then
+    echo "Erro: Nenhum diretório ou arquivo especificado."
+    show_help
+    exit 1
+fi
+
+# Criar o diretório de saída caso não exista
+mkdir -p "$output_dir"
+
+# Se for um diretório, pega todas as imagens dentro dele
+if [ -d "$1" ]; then
+    files=("$1"/*)
+else
+    files=("$@")
+fi
+
+# Verifica se há arquivos no array
+if [ ${#files[@]} -eq 0 ]; then
+    echo "Erro: Nenhuma imagem encontrada no diretório ou arquivos especificados."
+    exit 1
+fi
+
+# Processa as imagens
+for file in "${files[@]}"; do
+    if [[ -f "$file" ]]; then
+        filename=$(basename "$file")
+        output_file="$output_dir/$filename"
+
+        # Substitui a transparência pela cor especificada e usa apenas -background e -flatten
+        convert "$file" -background "$bg_color" -flatten "$output_file"
+
+        if [ $? -eq 0 ]; then
+            echo "Convertido: $file -> $output_file (transparência substituída por $bg_color)"
+        else
+            echo "Erro ao converter: $file"
+        fi
+    fi
+done
+
+echo "Conversão concluída! Imagens salvas em: $output_dir"
