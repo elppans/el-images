@@ -20,6 +20,9 @@ output_dir="$HOME/Imagens/Convertidas"
 # Cria o diretório de saída se não existir
 mkdir -p "$output_dir"
 
+# Caminho do arquivo de log em /tmp com o nome correto
+log_file="/tmp/mudar_transparencia_para_cor.log"
+
 # Verifica se há arquivos ou diretórios passados como argumento
 if [ -z "$1" ]; then
     zenity --error --text="Erro: Nenhum arquivo ou diretório selecionado."
@@ -32,9 +35,10 @@ for file in "$@"; do
         filename=$(basename "$file")
         output_file="$output_dir/$filename"
 
-        # Executa o script de conversão chamando o seu script convert-elcolor2transparent
-        /usr/local/bin/convert-elcolor2transparent "$color" -o "$output_dir" "$file"
+        # Executa o script de conversão chamando o seu script convert-eltransparent2color
+        /usr/local/bin/convert-eltransparent2color "$color" -o "$output_dir" "$file" &>> "$log_file"
 
+        # Verifica o código de saída do comando
         if [ $? -eq 0 ]; then
             zenity --info --text="Imagem convertida: $file -> $output_file"
         else
