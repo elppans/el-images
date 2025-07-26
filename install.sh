@@ -11,7 +11,7 @@ fi
 
 LOCAL_BIN="usr/local/bin"
 ACTION_DIR="$HOME/.local/share/nautilus/scripts"
-ACTION_TOOLS="El-Images"
+ACTION_TOOLS="Imagens"
 
 # Crie o diretório de scripts do Nautilus no diretório do usuário se não existir
 mkdir -p "$ACTION_DIR"
@@ -23,10 +23,10 @@ cp -rf "$ACTION_TOOLS" "$ACTION_DIR"
 chmod +x "$ACTION_DIR"/"$ACTION_TOOLS"/*/*
 
 # Copie os binários para o sistema
-cd "$LOCAL_BIN"
-sudo cp -a * "/$LOCAL_BIN"
+cd "$LOCAL_BIN" || exit 1
+sudo cp -a ./* "/$LOCAL_BIN"
 
 # Reinicie o Nautilus para aplicar as mudanças
 nautilus -q
 
-echo "Configuração concluída. As ações 'El-Images' foi adicionada ao menu de contexto do Nautilus."
+echo "Configuração concluída. As ações 'Imagens' foi adicionada ao menu de contexto do Nautilus."
